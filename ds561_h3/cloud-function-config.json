@@ -1,0 +1,15 @@
+{
+    "entryPoint": "files_get",
+    "runtime": "python311",
+    "trigger": {
+      "eventType": "http",
+      "securityLevel": "secure-always"
+    },
+    "availableMemoryMb": 256,
+    "timeout": "60s",
+    "allowUnauthenticated": true,
+    "sourceUploadUrl": "URL_TO_YOUR_CODE_ARCHIVE",
+    "serviceAccountEmail": "SERVICE_ACCOUNT_EMAIL",
+    "region": "us-east4"
+  }
+  
