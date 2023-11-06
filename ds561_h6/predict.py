@@ -16,8 +16,6 @@ DB_PASS = ""
 DB_NAME = "db1"
 
 ########### 1. Load data from SQL Server ###########
-
-
 def load_data():
     try:
         # initialize Connector object
@@ -61,126 +59,57 @@ def load_data():
 
 # main
 # df = load_data()
-def function1():
-    df = pd.read_csv("data.csv")
-    print(df.head())
-    print(df.columns)
+df = pd.read_csv("data.csv").dropna()
 
-    df['ip_address'] = df['ip_address'].str.replace('.', '').astype('int64')
-    print(df['ip_address'])
+# enumerating the country column
+country_mapping = {country: i for i, country in enumerate(df['country'].unique())}
+df['country'] = df['country'].map(country_mapping)
 
-    # Convert 'country' to numeric labels
-    country_mapping = {country: i for i, country in enumerate(df['country'].unique())}
-    df['country'] = df['country'].map(country_mapping)
+# enumerating the name column
+name_mapping = {name: i for i, name in enumerate(df['name'].unique())}
+df['name'] = df['name'].map(name_mapping)
 
-    print(df['country'].nlargest(1))
+# enumerating the time column
+name_mapping = {time: i for i, time in enumerate(df['time'].unique())}
+df['time'] = df['time'].map(name_mapping)
 
-    # Split the data into features and target
-    X = df['ip_address'].values.reshape(-1,1)
-    y = df['country']
+# enumerating the income column
+name_mapping = {income: i for i, income in enumerate(df['income'].unique())}
+df['income'] = df['income'].map(name_mapping)
 
-    from sklearn.ensemble import RandomForestClassifier
-    from sklearn.model_selection import train_test_split
-    from sklearn.metrics import accuracy_score
+# feature extraction of ip_address
+df[['ip_1', 'ip_2', 'ip_3', 'ip_4']] = df['ip_address'].str.split('.', expand=True).astype(int)
+df = df.drop('ip_address', axis=1)
 
-    # Split the data into training and testing sets
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+# one hot encoding remaining categorical columns
+data_columns_categorical = list(df.dtypes[df.dtypes == 'object'].index)
+data_cleaned = pd.get_dummies(df, columns=data_columns_categorical)
 
+########### Model 1 ###########
+X = data_cleaned[['ip_1', 'ip_2', 'ip_3', 'ip_4']]
+y = data_cleaned['country']
 
-    ###### Grid Search ######
-    # param_grid = {
-    #     'n_estimators': [100, 200, 300],
-    #     'max_depth': [None, 10, 20, 30],
-    #     'min_samples_split': [2, 5, 10],
-    #     'min_samples_leaf': [1, 2, 4],
-    #     'max_features': ['auto', 'sqrt', 'log2'],
-    #     'bootstrap': [True, False],
-    #     'criterion': ['gini', 'entropy']
-    # }
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
 
-    # random_forest = RandomForestClassifier(random_state=0)
-    # grid_search = GridSearchCV(random_forest, param_grid, cv=5, scoring='accuracy', n_jobs=1)
+model = RandomForestClassifier(n_estimators=100, random_state=0)
+model.fit(X_train, y_train)
 
-    # grid_search.fit(X_train, y_train)
+y_pred = model.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
 
-    # print()
-    # print("Best Hyperparameters:", grid_search.best_params_)
-    # print("Best F1 Score:", grid_search.best_score_)
+print("Accuracy with Best Model:", accuracy)
 
-    # best_rf = grid_search.best_estimator_
+########### Model 2 ###########
+y = data_cleaned['income']
+X = data_cleaned.drop(['income'], axis=1)
+print(X.columns)
 
-    # y_pred = best_rf.predict(X_test)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
 
-    # accuracy = accuracy_score(y_test, y_pred)
+model = RandomForestClassifier(n_estimators=100, random_state=0)
+model.fit(X_train, y_train)
 
-    # print()
-    # print("Accuracy with Best Model:", accuracy)
+y_pred = model.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
 
-    ###### Random Forest ######
-    random_forest = RandomForestClassifier(n_estimators=100,  # You can specify the number of trees
-                                        max_depth=None,     # Specify the maximum depth of trees
-                                        min_samples_split=2,  # Specify the minimum number of samples required to split an internal node
-                                        min_samples_leaf=1,   # Specify the minimum number of samples required to be at a leaf node
-                                        max_features='auto',  # Number of features to consider for the best split (you can adjust this)
-                                        bootstrap=True,       # Whether to use bootstrapping when building trees
-                                        criterion='gini',     # Splitting criterion, can be 'gini' or 'entropy'
-                                        random_state=0)       # Seed for random number generator
-
-    # Fit the Random Forest classifier to the training data
-    random_forest.fit(X_train, y_train)
-
-    # Make predictions on the test data
-    y_pred = random_forest.predict(X_test)
-
-    # Calculate the accuracy of the model
-    accuracy = accuracy_score(y_test, y_pred)
-
-    print("Accuracy:", accuracy)
-
-def function2():
-    df = pd.read_csv("data1.csv")
-
-    # Convert categorical variables to one-hot encoding
-    df = pd.get_dummies(df, columns=['gender', 'age', 'time', 'country'], drop_first=True)
-
-    # Separate the target and features for set 2 (x2, y2)
-    x2 = df.drop(['income', 'name', 'ip_address'], axis=1)  # Remove 'ip_address'
-    y2 = df['income']
-
-    # Split the data into training and testing sets for set 2
-    X_train2, X_test2, y_train2, y_test2 = train_test_split(x2, y2, test_size=0.3, random_state=0)
-
-    # Define a parameter grid for the grid search
-    param_grid = {
-        'n_estimators': [100, 200, 300],  # You can experiment with different values
-        'max_depth': [None, 10, 20, 30],  # You can experiment with different values
-        'min_samples_split': [2, 5, 10],  # You can experiment with different values
-        'min_samples_leaf': [1, 2, 4],  # You can experiment with different values
-        'bootstrap': [True, False],
-        'criterion': ['gini', 'entropy']
-    }
-
-    # Initialize RandomForestClassifier
-    random_forest = RandomForestClassifier(random_state=0)
-
-    # Create the GridSearchCV object
-    grid_search = GridSearchCV(random_forest, param_grid, cv=5, scoring='accuracy', n_jobs=-1)
-
-    # Fit the grid search to the training data
-    grid_search.fit(X_train2, y_train2)
-
-    # Print the best hyperparameters and best score
-    print("Best Hyperparameters:", grid_search.best_params_)
-    print("Best Accuracy Score:", grid_search.best_score_)
-
-    # Get the best estimator (RandomForestClassifier with the best hyperparameters)
-    best_rf = grid_search.best_estimator_
-
-    # Make predictions on the test data using the best model
-    y_pred2 = best_rf.predict(X_test2)
-
-    # Calculate accuracy for set 2
-    accuracy = accuracy_score(y_test2, y_pred2)
-    print("Accuracy for set 2:", accuracy)
-
-function2()
+print("Accuracy with Best Model:", accuracy)
