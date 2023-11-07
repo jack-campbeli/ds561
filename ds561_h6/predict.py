@@ -58,16 +58,15 @@ def load_data():
         print(f"Error retrieving data from the database: {str(e)}")
 
 # main
-# df = load_data()
-df = pd.read_csv("data.csv").dropna()
+df = load_data()
 
 # enumerating the country column
 country_mapping = {country: i for i, country in enumerate(df['country'].unique())}
 df['country'] = df['country'].map(country_mapping)
 
-# enumerating the name column
-name_mapping = {name: i for i, name in enumerate(df['name'].unique())}
-df['name'] = df['name'].map(name_mapping)
+# enumerating the file_name column
+name_mapping = {file_name: i for i, file_name in enumerate(df['file_name'].unique())}
+df['file_name'] = df['file_name'].map(name_mapping)
 
 # enumerating the time column
 name_mapping = {time: i for i, time in enumerate(df['time'].unique())}
