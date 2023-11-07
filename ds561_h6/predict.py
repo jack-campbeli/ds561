@@ -101,7 +101,6 @@ print("Accuracy with Best Model:", accuracy)
 ########### Model 2 ###########
 y = data_cleaned['income']
 X = data_cleaned.drop(['income'], axis=1)
-print(X.columns)
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
 
