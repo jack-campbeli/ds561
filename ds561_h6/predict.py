@@ -58,16 +58,15 @@ def load_data():
         print(f"Error retrieving data from the database: {str(e)}")
 
 # main
-# df = load_data()
-df = pd.read_csv("data.csv").dropna()
+df = load_data()
 
 # enumerating the country column
 country_mapping = {country: i for i, country in enumerate(df['country'].unique())}
 df['country'] = df['country'].map(country_mapping)
 
-# enumerating the name column
-name_mapping = {name: i for i, name in enumerate(df['name'].unique())}
-df['name'] = df['name'].map(name_mapping)
+# enumerating the file_name column
+name_mapping = {file_name: i for i, file_name in enumerate(df['file_name'].unique())}
+df['file_name'] = df['file_name'].map(name_mapping)
 
 # enumerating the time column
 name_mapping = {time: i for i, time in enumerate(df['time'].unique())}
@@ -91,7 +90,7 @@ y = data_cleaned['country']
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
 
-model = RandomForestClassifier(n_estimators=100, random_state=0)
+model = RandomForestClassifier(n_estimators=50, random_state=0)
 model.fit(X_train, y_train)
 
 y_pred = model.predict(X_test)
@@ -102,11 +101,10 @@ print("Accuracy with Best Model:", accuracy)
 ########### Model 2 ###########
 y = data_cleaned['income']
 X = data_cleaned.drop(['income'], axis=1)
-print(X.columns)
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
 
-model = RandomForestClassifier(n_estimators=100, random_state=0)
+model = RandomForestClassifier(n_estimators=55, random_state=0)
 model.fit(X_train, y_train)
 
 y_pred = model.predict(X_test)
