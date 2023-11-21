@@ -1,12 +1,14 @@
 from flask import Flask, request, Response
 from google.cloud import storage
 from google.cloud import pubsub_v1
+import socket
 
 app = Flask(__name__)
 
 # python http-client.py -d "127.0.0.1" -p "8080" -b "none" -w "files_get" -v -n 15 -i 10000
 # python3 http-client.py -d "34.31.26.182" -p "8080" -b "none" -w "files_get" -v -n 5000 -i 10000
-# python3 http-client.py -d "34.41.232.220" -p "8080" -b "none" -w "files_get" -v -n 5000 -i 10000
+# python3 http-client.py -d "35.188.147.248" -p "8080" -b "none" -w "files_get" -v -n 5000 -i 10000
+# python3 http-client.py -d 35.188.147.248  -p 8080 -b "none" -w files_get -v -n 200 -i 9999 -f
 
 banned = ['north korea', 'iran', 'cuba', 'myanmar', 'iraq', 'libya', 'sudan', 'zimbabwe', 'syria']
 
@@ -14,6 +16,11 @@ def get_filename():
     url_path = request.path
     filename = url_path.split('/')[-1]
     return filename
+
+@app.route('/health', methods=['GET'])
+def health_check():
+    vm_name = socket.gethostname()  # Get the VM name
+    return Response(f"OK: {vm_name}", status=200, headers={'Content-Type': 'text/plain'})
 
 @app.route('/files_get/<filename>', methods=['GET','POST','PUT', 'DELETE', 'HEAD', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH'])
 def files_get(filename):
@@ -35,14 +42,16 @@ def files_get(filename):
             print("Permission Granted")
 
             # Getting file contents 
-            # client = storage.Client()
-            # bucket = client.bucket('bu-ds561-jawicamp')
-            # blob = bucket.blob(filename)
+            client = storage.Client()
+            bucket = client.bucket('bu-ds561-jawicamp')
+            blob = bucket.blob(filename)
 
             try:
                 # Returning file contents and OK status
-                # content = blob.download_as_text()
-                response = Response("us-central1-b", status=200, headers={'Content-Type': 'text/html'})
+                content = blob.download_as_text()
+                vm_name = socket.gethostname()  # Get the VM name
+                content_with_vm = f"VM Name: {vm_name}\n{content}"
+                response = Response(content_with_vm, status=200, headers={'Content-Type': 'text/html'})
                 return response
 
             except Exception as e:
@@ -72,4 +81,3 @@ if __name__ == '__main__':
 
 # gcloud compute forwarding-rules describe www-rule --region us-central1
 # while true; do curl -m1 35.188.147.248; done
-

@@ -130,29 +130,35 @@ def build_headers(country, ip):
     return headers
 
 def make_request(domain, port, country, ip, filename, use_ssl, ssl_context, follow, verbose):
-    if verbose:
-        print("Requesting ", filename, " from ", domain, port)
-    conn = None
-    if use_ssl:
-        conn = http.client.HTTPSConnection(domain, port, context=ssl_context)
-    else:
-        conn = http.client.HTTPConnection(domain, port)
+    try:
+        if verbose:
+            print("Requesting ", filename, " from ", domain, port)
+        conn = None
+        if use_ssl:
+            conn = http.client.HTTPSConnection(domain, port, context=ssl_context)
+        else:
+            conn = http.client.HTTPConnection(domain, port)
 
-    headers = build_headers(country, ip)
-    conn.request("GET", filename, headers=headers)
-    res = conn.getresponse()
-    data = res.read()
-    if verbose:
-        print(res.status, res.reason)
-        print(res.msg)
-        print(data)
-    if follow:
-        location_header = res.getheader('location')
-        if location_header is not None:
-            filename = urljoin(filename, location_header)
-            make_request(domain, country, ip, filename, use_ssl, ssl_context, follow, verbose)
-    conn.close()
-                 
+        headers = build_headers(country, ip)
+        conn.request("GET", filename, headers=headers)
+        res = conn.getresponse()
+        data = res.read()
+        if verbose:
+            print(res.status, res.reason)
+            print(res.msg)
+            print(data)
+        if follow:
+            location_header = res.getheader('location')
+            if location_header is not None:
+                filename = urljoin(filename, location_header)
+                make_request(domain, country, ip, filename, use_ssl, ssl_context, follow, verbose)
+        conn.close()
+    except http.client.HTTPException as e:
+        print(f"HTTPException: {e}")
+    except ConnectionResetError as e:
+        print(f"ConnectionResetError: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")                
         
 def main():
     ssl_context = fix_certs()
