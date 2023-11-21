@@ -59,6 +59,9 @@ list_of_incomes = ['0-10k', '10k-20k', '20k-40k', '40k-60k', '60k-100k', '100k-1
 cidr_dict = {}
 used_cidrs = []
 
+www1_count = 0
+www2_count = 0
+
 def fix_certs():
     ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS)
     ssl_context.verify_mode = ssl.CERT_REQUIRED
@@ -143,10 +146,19 @@ def make_request(domain, port, country, ip, filename, use_ssl, ssl_context, foll
         conn.request("GET", filename, headers=headers)
         res = conn.getresponse()
         data = res.read()
+        vm_name = res.headers.get("X-VM-Name")
         if verbose:
+            if vm_name is None:
+                vm_name = "Unknown"
+            elif vm_name == "www1":
+                global www1_count
+                www1_count += 1
+            elif vm_name == "www2":
+                global www2_count
+                www2_count += 1
             print(res.status, res.reason)
             print(res.msg)
-            print(data)
+            # print(data)
         if follow:
             location_header = res.getheader('location')
             if location_header is not None:
@@ -192,6 +204,9 @@ def main():
         if args.ssl and args.port==80:
             args.port=443
         make_request(args.domain, args.port, country, ip, filename, args.ssl, ssl_context, args.follow, args.verbose)
+    
+    print("www1_count: ", www1_count)
+    print("www2_count: ", www2_count)
 
 if __name__ == "__main__":
     main()

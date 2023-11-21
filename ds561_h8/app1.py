@@ -1,4 +1,4 @@
-from flask import Flask, request, Response
+from flask import Flask, request, Response, session
 from google.cloud import storage
 from google.cloud import pubsub_v1
 import socket
@@ -49,9 +49,8 @@ def files_get(filename):
             try:
                 # Returning file contents and OK status
                 content = blob.download_as_text()
-                vm_name = socket.gethostname()  # Get the VM name
-                content_with_vm = f"VM Name: {vm_name}\n{content}"
-                response = Response(content_with_vm, status=200, headers={'Content-Type': 'text/html'})
+                vm_name = socket.gethostname()  
+                response = Response(content, status=200, headers={'Content-Type': 'text/html', 'X-VM-Name': vm_name})
                 return response
 
             except Exception as e:
