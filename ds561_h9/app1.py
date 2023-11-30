@@ -2,6 +2,7 @@ from flask import Flask, request, Response
 from google.cloud import storage
 from google.cloud import pubsub_v1
 import socket
+import logging
 
 app = Flask(__name__)
 
@@ -36,6 +37,7 @@ def files_get(filename):
     # Checking country and handling file retrieval
     if method != 'GET':
         print("Method not implemented: ", method)
+        logging.error(f'get_files 501 - {method} method not implemented') #
         return 'Not Implemented', 501
     else:
         if country not in banned:
@@ -55,6 +57,7 @@ def files_get(filename):
 
             except Exception as e:
                 print("File not found: ", filename)
+                logging.warning(f'get_files 404 - Requested file not found: {filename}') #
                 return str(e), 404
         else:
             print("Permission Denied")
@@ -73,6 +76,8 @@ def files_get(filename):
             except Exception as e:
                 print("Error publishing to Pub/Sub:", str(e))
                 return "Publish Denied", 400
+
+            logging.error(f'get_files 400 - Requests from {country} are forbidden') #
             return "Permission Denied", 400
 
 if __name__ == '__main__':

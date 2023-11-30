@@ -146,8 +146,8 @@ def make_request(domain, port, country, ip, filename, use_ssl, ssl_context, foll
     data = res.read()
     if verbose:
         print(res.status, res.reason)
-        print(res.msg)
-        print(data)
+        # print(res.msg)
+        # print(data)
     if follow:
         location_header = res.getheader('location')
         if location_header is not None:
