@@ -1,0 +1,142 @@
+# YAML `DEPENDSON` AND `REFERENCES` KEYWORDS ARE 
+# REQUIRED FOR THIS HOMEWORK.
+# LOOK UP DOCUMENTATION ON THESE KEYWORKS
+
+resources:
+# VM 1
+- type: compute.v1.instance
+  name: deployment-vm-1
+  properties:
+    # The properties of the resource depend on the type of resource. For a list
+    # of properties, see the API reference for the resource.
+    zone: us-central1-a 
+    machineType: https://www.googleapis.com/compute/v1/projects/jacks-project-398813/zones/us-central1-a/machineTypes/e2-medium
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        # See a full list of image families at https://cloud.google.com/compute/docs/images#os-compute-support
+        # The format of the sourceImage URL is: https://www.googleapis.com/compute/v1/projects/[IMAGE_PROJECT]/global/images/family/[FAMILY_NAME]
+        sourceImage: https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/family/debian-11
+    networkInterfaces:
+    - network: https://www.googleapis.com/compute/v1/projects/jacks-project-398813/global/networks/default
+      # Access Config required to give the instance a public IP address
+      accessConfigs:
+      - name: External NAT
+        type: ONE_TO_ONE_NAT
+      serviceAccounts:
+      - email: owner-acc@jacks-project-398813.iam.gserviceaccount.com
+        scopes:
+        - https://www.googleapis.com/auth/cloud-platform
+    metadata:
+      items:
+        - key: startup-script
+          value: |
+            sudo apt-get update
+            sudo apt-get install -y python3-pip 
+            
+            if [ -f 'requirements.txt' ]; then
+              echo 'requirements.txt present'
+            else
+              gsutil cp gs://bu-ds561-jawicamp/ds561_h10/requirements.txt .
+            fi
+
+            if [ -f 'app1.py' ]; then
+              echo 'app1.py present'
+            else
+              gsutil cp gs://bu-ds561-jawicamp/ds561_h10/app1.py .
+            fi
+
+            python3 -m pip install -r 'requirements.txt'
+
+
+# VM (2)
+- type: compute.v1.instance
+  name: deployment-vm-2
+  properties:
+    zone: us-central1-a 
+    machineType: https://www.googleapis.com/compute/v1/projects/jacks-project-398813/zones/us-central1-a/machineTypes/e2-medium
+    disks:
+    - deviceName: boot
+      type: PERSISTENT
+      boot: true
+      autoDelete: true
+      initializeParams:
+        sourceImage: https://www.googleapis.com/compute/v1/projects/debian-cloud/global/images/family/debian-11
+    networkInterfaces:
+    - network: https://www.googleapis.com/compute/v1/projects/jacks-project-398813/global/networks/default
+      accessConfigs:
+      - name: External NAT
+        type: ONE_TO_ONE_NAT
+      serviceAccounts:
+      - email: owner-acc@jacks-project-398813.iam.gserviceaccount.com
+        scopes:
+        - https://www.googleapis.com/auth/cloud-platform
+    metadata:
+      items:
+        - key: startup-script
+          value: |
+            sudo apt-get update
+            sudo apt-get install -y python3-pip  
+            
+            if [ -f 'requirements.txt' ]; then
+              echo 'requirements.txt present'
+            else
+              gsutil cp gs://bu-ds561-jawicamp/ds561_h10/requirements.txt .
+            fi
+
+            if [ -f 'app2.py' ]; then
+              echo 'app2.py present'
+            else
+              gsutil cp gs://bu-ds561-jawicamp/ds561_h10/app2.py .
+            fi
+
+            python3 -m pip install -r 'requirements.txt'
+
+# BUCKET (1)
+- type: storage.v1.bucket
+  name: deployment-bucket-1 
+  properties:
+   name: deployment-bucket-1 
+   location: us-central1
+   project: jacks-project-398813
+
+# SQL (instance)
+- type: sqladmin.v1beta4.instance
+  name: deployment-sql-instance
+  properties:
+    name: deployment-sql-instance
+    region: us-central1
+    databaseVersion: MYSQL_8_0
+    settings:
+      tier: db-n1-standard-1
+      ipConfiguration:
+        ipv4Enabled: true
+      userLabels:
+        environment: production
+    instanceType: CLOUD_SQL_INSTANCE
+    project: jacks-project-398813
+    rootPassword: 1234
+
+# SQL (database)
+- type: sqladmin.v1beta4.database
+  name: deployment-sql-db
+  properties:
+    name: deployment-sql-db
+    instance: $(ref.deployment-sql-instance.name)
+    project: jacks-project-398813
+
+# PUB/SUB (topic)
+- type: gcp-types/pubsub-v1:projects.topics
+  name: deployment-topic-banned-countries
+  properties:
+    topic: deployment-topic-banned-countries
+
+# PUB/SUB (subscription)
+- type: gcp-types/pubsub-v1:projects.subscriptions
+  name: deployment-subscription-banned-countries
+  properties:
+    subscription: deployment-subscription-banned-countries
+    topic: $(ref.deployment-topic-banned-countries.name)

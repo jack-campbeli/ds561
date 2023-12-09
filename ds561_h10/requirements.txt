@@ -1,0 +1,9 @@
+Flask
+flask
+google
+google-cloud-storage
+google-cloud-pubsub
+cloud-sql-python-connector[pymysql]
+google-cloud-logging
+sqlalchemy
+pymysql
